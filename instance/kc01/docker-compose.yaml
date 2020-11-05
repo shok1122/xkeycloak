@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  #
+  # keycloak
+  #
+  service:
+    image: "jboss/keycloak"
+    environment:
+      KEYCLOAK_USER: "admin"
+      KEYCLOAK_PASSWORD: "pass"
+      DB_ADDR: "db"
+      DB_PORT: "5432"
+      DB_DATABASE: "keycloak"
+      DB_VENDOR: "postgres"
+      DB_USER: "kc"
+      DB_PASSWORD: "pass"
+    ports:
+      - "8080:8080"
+    networks:
+      - "frontend"
+      - "backend"
+  #
+  # database for keycloak
+  #
+  db:
+    image: "postgres:13.0-alpine"
+    environment:
+      POSTGRES_USER: "kc"
+      POSTGRES_PASSWORD: "pass"
+      POSTGRES_DB: "keycloak"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5430:5432"
+    volumes:
+      - "db:/var/lib/postgresql/data"
+    networks:
+      - "backend"
+
+volumes:
+  db:
+
+networks:
+  frontend:
+  backend:
+
