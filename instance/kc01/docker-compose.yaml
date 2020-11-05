@@ -4,7 +4,7 @@ services:
   #
   # keycloak
   #
-  service:
+  keycloak:
     image: "jboss/keycloak"
     environment:
       KEYCLOAK_USER: "admin"
