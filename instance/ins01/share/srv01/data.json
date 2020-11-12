@@ -1,0 +1,15 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "car"
+    },
+    {
+      "id": 2,
+      "name": "mogumogu"
+    }
+  ],
+  "profile": {
+    "name": "1031hoda"
+  }
+}
