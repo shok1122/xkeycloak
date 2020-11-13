@@ -5,23 +5,108 @@ services:
   # gateway
   #
   gw01:
-    image: "openresty/openresty:alpine"
-    ports:
-      - "80:80"
-    volumes:
-      - "./share/gw/nginx:/etc/nginx"
+    image: "kong:oidc"
+    user: "kong"
+    depends_on:
+      - "gw01db"
+    environment:
+      KONG_ADMIN_ACCESS_LOG: "/dev/stdout"
+      KONG_ADMIN_ERROR_LOG: "/dev/stderr"
+      KONG_ADMIN_LISTEN: '0.0.0.0:8001'
+      KONG_CASSANDRA_CONTACT_POINTS: "gw01db"
+      KONG_DATABASE: "postgres"
+      KONG_PG_DATABASE: "kong"
+      KONG_PG_HOST: "gw01db"
+      KONG_PG_USER: "kong"
+      KONG_PROXY_ACCESS_LOG: "/dev/stdout"
+      KONG_PROXY_ERROR_LOG: "/dev/stderr"
+      KONG_PG_PASSWORD_FILE: "/run/secrets/kong_postgres_password"
+    secrets:
+      - "kong_postgres_password"
     networks:
       - "gw2kc"
       - "gw2srv"
+    ports:
+      - "8000:8000/tcp"
+      - "8001:8001/tcp"
+      - "8443:8443/tcp"
+      - "8444:8444/tcp"
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: "10s"
+      timeout: "10s"
+      retries: 10
+    restart: "on-failure"
+    deploy:
+      restart_policy:
+        condition: "on-failure"
+  gw01db:
+    image: "postgres:9.5"
+    hostname: "gw01db"
+    environment:
+      POSTGRES_DB: "kong"
+      POSTGRES_USER: "kong"
+      POSTGRES_PASSWORD_FILE: "/run/secrets/kong_postgres_password"
+    secrets:
+      - "kong_postgres_password"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${KONG_PG_USER:-kong}"]
+      interval: "30s"
+      timeout: "30s"
+      retries: 3
+    restart: "on-failure"
+    deploy:
+      restart_policy:
+        condition: "on-failure"
+    stdin_open: true
+    tty: true
+    networks:
+      - "gw2kc"
+    volumes:
+      - "gw01db:/var/lib/postgresql/data"
+  kong-migrations:
+    image: "kong:oidc"
+    command: "kong migrations bootstrap"
+    depends_on:
+      - "gw01db"
+    environment:
+      KONG_DATABASE: "postgres"
+      KONG_PG_DATABASE: "kong"
+      KONG_PG_HOST: "gw01db"
+      KONG_PG_USER: "kong"
+      KONG_PG_PASSWORD_FILE: "/run/secrets/kong_postgres_password"
+    secrets:
+      - "kong_postgres_password"
+    networks:
+      - "gw2kc"
+    restart: "on-failure"
+    deploy:
+      restart_policy:
+        condition: "on-failure"
+  konga:
+    image: "pantsel/konga:0.14.9"
+    depends_on:
+      - "gw01db"
+    environment:
+      DB_ADAPTER: "postgres"
+      DB_HOST: "gw01db"
+      DB_PORT: "5432"
+      DB_USER: "kong"
+      DB_PASSWORD: "kong"
+      DB_DATABASE: "kong"
+    ports:
+      - "1337:1337"
+    networks:
+      - "gw2kc"
   #
   # keycloak
   #
   kc01:
-    image: "jboss/keycloak"
+    image: "jboss/keycloak:11.0.3"
     environment:
       KEYCLOAK_USER: "admin"
       KEYCLOAK_PASSWORD: "pass"
-      DB_ADDR: "db"
+      DB_ADDR: "kc01db"
       DB_PORT: "5432"
       DB_DATABASE: "keycloak"
       DB_VENDOR: "postgres"
@@ -31,11 +116,10 @@ services:
       - "8080:8080"
     networks:
       - "gw2kc"
-      - "kc2db"
   #
   # database for keycloak
   #
-  db:
+  kc01db:
     image: "postgres:13.0-alpine"
     environment:
       POSTGRES_USER: "kc"
@@ -45,9 +129,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - "./share/db:/var/lib/postgresql/data"
+      - "kc01db:/var/lib/postgresql/data"
     networks:
-      - "kc2db"
+      - "gw2kc"
   #
   # service
   #
@@ -80,6 +164,13 @@ services:
 
 networks:
   gw2kc:
-  kc2db:
   gw2srv:
+
+volumes:
+  gw01db:
+  kc01db:
+
+secrets:
+  kong_postgres_password:
+    file: ./KONG_DB_PASS
 
