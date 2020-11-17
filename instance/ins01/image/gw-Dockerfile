@@ -1,8 +1,5 @@
-FROM kong:2.2.0-alpine
+FROM openresty/openresty:alpine-fat
 
-USER root
-
-RUN luarocks install kong-oidc
-
-USER kong
+RUN apk add git \
+    && luarocks install lua-cjson
 
