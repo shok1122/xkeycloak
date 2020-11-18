@@ -1,17 +1,16 @@
 -- print('.....' .. ngx.http_Authorization)
 print('Hello World')
 
-local h = ngx.req.get_headers()
-
-print('>>> authorization: ' .. h['authorization'])
-
-local _, _, access_token = string.find(h['authorization'], "Bearer%s+(.*)")
+local tmp = ngx.var.http_Authorization
+local _, _, access_token = string.find(tmp, "Bearer%s+(.*)")
 
 print(">>> access_token: " .. access_token)
 
-ngx.var.access_token = access_token
+-- ngx.var.access_token = access_token
 
-local res = ngx.location.capture('/auth_check')
+-- local res = ngx.location.capture('/auth_check', { vars = { access_token = access_token } })
+-- local res = ngx.location.capture('/auth_check', {copy_all_vars = true})
+local res = ngx.location.capture('/auth_check', {args = {token = access_token, name = "kakei"}})
 
 print(">>> status: " .. res.status)
 print(">>> body: " .. res.body)
@@ -21,7 +20,7 @@ local json_body = cjson.decode(res.body)
 local is_active = json_body['active']
 print(">>> active: " .. tostring(is_active))
 
-if is_active == false then
+if is_active ~= true then
     ngx.status = 403
     ngx.say(err)
     ngx.exit(ngx.HTTP_FORBIDDEN)
