@@ -21,6 +21,7 @@ services:
   kc01:
     image: "jboss/keycloak:11.0.3"
     environment:
+      KEYCLOAK_LOGLEVEL: "INFO"
       KEYCLOAK_USER: "admin"
       KEYCLOAK_PASSWORD: "pass"
       DB_ADDR: "kc01db"
