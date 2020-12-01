@@ -70,7 +70,7 @@ function generateOrg3() {
     echo "##########################################################"
 
     set -x
-    cryptogen generate --config=org3-crypto.yaml --output="../organizations"
+    cryptogen generate --config=org3-crypto.yaml --output="organizations"
     res=$?
     set +x
     if [ $res -ne 0 ]; then
@@ -128,7 +128,7 @@ function generateOrg3Definition() {
   echo "##########################################################"
    export FABRIC_CFG_PATH=$PWD
    set -x
-   configtxgen -printOrg Org3MSP > ../organizations/peerOrganizations/org3.xkeycloak.com/org3.json
+   configtxgen -printOrg Org3MSP > organizations/peerOrganizations/org3.xkeycloak.com/org3.json
    res=$?
    set +x
    if [ $res -ne 0 ]; then
@@ -154,16 +154,16 @@ function Org3Up () {
 # Generate the needed certificates, the genesis block and start the network.
 function addOrg3 () {
 
-  # If the test network is not up, abort
-  if [ ! -d ../organizations/ordererOrganizations ]; then
-    echo
-    echo "ERROR: Please, run ./network.sh up createChannel first."
-    echo
-    exit 1
-  fi
+# # If the test network is not up, abort
+# if [ ! -d ../organizations/ordererOrganizations ]; then
+#   echo
+#   echo "ERROR: Please, run ./network.sh up createChannel first."
+#   echo
+#   exit 1
+# fi
 
   # generate artifacts if they don't exist
-  if [ ! -d "../organizations/peerOrganizations/org3.xkeycloak.com" ]; then
+  if [ ! -d "organizations/peerOrganizations/org3.xkeycloak.com" ]; then
     generateOrg3
     generateOrg3Definition
   fi
