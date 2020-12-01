@@ -1,4 +1,3 @@
-
 # SPDX-License-Identifier: Apache-2.0
 version: '2.1'
 
@@ -9,7 +8,7 @@ volumes:
 networks:
   mynetwork.com:
     external:
-      name: net_test
+      name: docker_test
 
 services:
 
@@ -48,7 +47,7 @@ services:
     volumes:
       - ./config.json:/opt/explorer/app/platform/fabric/config.json
       - ./connection-profile:/opt/explorer/app/platform/fabric/connection-profile
-      - ./organizations:/tmp/crypto
+      - ./crypto:/tmp/crypto
       - walletstore:/opt/wallet
     ports:
       - 8080:8080
